@@ -1,4 +1,4 @@
-# Visão de produto — Recomeço
+# Visão de produto — Rotina Mágica
 
 Ciclo 0 · 2026-10-16. Documento vivo: atualizar quando uma decisão mudar.
 

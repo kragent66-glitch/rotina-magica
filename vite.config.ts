@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  // Caminhos relativos: funciona em https://<usuario>.github.io/recomeco/ e em qualquer subpasta.
+  // Caminhos relativos: funciona em https://<usuario>.github.io/rotina-magica/ e em qualquer subpasta.
   base: './',
   plugins: [react()],
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },

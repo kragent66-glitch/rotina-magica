@@ -1,4 +1,4 @@
-# CLAUDE.md — Recomeço
+# CLAUDE.md — Rotina Mágica
 
 Guia para quem (humano ou IA) trabalha neste repositório. Mantenha atualizado a cada ciclo.
 
@@ -35,7 +35,7 @@ precisa ser barata, opcional e não atrapalhar o fluxo de crise.
 | 2026-10-16 | Linguagem simples, sem jargão; abas Hoje / Ajuda agora / Diário / Ajustes; nomes mágicos só como detalhe ("Luz pelo corpo" explica o Pilar do Meio) | Pedido do autor: texto próximo do público, com abordagem de psicologia |
 | 2026-10-16 | Cores exatas do Lições do Dia (paleta "Noite" do Templo, repo `licoes-do-dia`, `docs/templo/templo.css`): fundo #0e1017, dourado #c9a45c, títulos #f1e6cf, céu estrelado | Pedido do autor: mesmo visual do outro app |
 | 2026-10-16 | "Desatar um pensamento": registro de pensamentos da TCC em 4 degraus (corpo, emoção, pensamento + armadilhas, resposta) | Arquivo HABIL (modelo de subir a Árvore + distorções de Burns); TCC tem forte evidência em dependência de cocaína. Inclui a "permissão" ("só hoje, eu mereço") |
-| 2026-10-17 | Código aberto (MIT) com CONTRIBUTING, código de conduta, SECURITY e modelos de issue/PR; nome pessoal removido dos docs | Pedido do autor. Repositório novo criado só com o estado atual, sem histórico pessoal; torná-lo público é decisão do autor |
+| 2026-10-17 | Código aberto (MIT) com CONTRIBUTING, código de conduta, SECURITY e modelos de issue/PR; nome pessoal removido dos docs | Pedido do autor. Repositório público `rotina-magica`, criado só com o estado atual, sem histórico pessoal. Site: https://td9251156-creator.github.io/rotina-magica/ (mesma origem do endereço antigo, então os dados do celular continuam) |
 | 2026-10-17 | "Clima de hoje": previsão de risco por dia da semana, hora de pico e gatilho, só com dados do aparelho | Prevenção de recaída começa por prever a situação de risco (Marlatt). Precisa de ≥3 registros; antes disso mostra "aprendendo" |
 | 2026-10-17 | Rotina com ou sem ritual (`routineStyle`), mesmos ids de passo | Para servir a quem não pratica magia sem perder o histórico; versão laica usa luz da manhã, intenção do dia, relaxamento muscular progressivo |
 | 2026-10-17 | Carta do eu calmo (`letter`) abre primeiro em Ajuda agora; escondida com PIN | Pensamento de futuro e "o eu calmo prepara o eu com vontade"; na crise, a voz da própria pessoa |

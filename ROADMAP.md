@@ -1,4 +1,4 @@
-# ROADMAP — Recomeço
+# ROADMAP — Rotina Mágica
 
 Prioridade: o que mais ajuda em momento de crise primeiro. Detalhes e justificativas em
 [`docs/visao-produto.md`](docs/visao-produto.md).
@@ -7,7 +7,6 @@ Prioridade: o que mais ajuda em momento de crise primeiro. Detalhes e justificat
 - Testar o app completo no celular, no uso real.
 
 ## Próximos
-- Tornar público o repositório novo (sem histórico pessoal): decisão do autor.
 - Laboratório cruzando o Diário (gatilhos, quebras) com as noites sem usar.
 - Lembrete por período (manhã, Ahathoor ao meio-dia) na agenda, se a pessoa quiser mais de um.
 - Desafios semanais e modos difíceis desbloqueados por nível.
