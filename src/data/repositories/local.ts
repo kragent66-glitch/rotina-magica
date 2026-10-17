@@ -80,11 +80,11 @@ export function importData(storage: KeyValueStorage, json: string): void {
   try {
     parsed = JSON.parse(json);
   } catch {
-    throw new Error('Arquivo não é um backup do Rumo');
+    throw new Error('Este arquivo não é um backup da Rotina Mágica');
   }
   const p = parsed as { app?: unknown; data?: Partial<Snapshot> };
   if (p.app !== 'rumo' || !p.data || p.data.version !== 1 || typeof p.data.settings !== 'object') {
-    throw new Error('Arquivo não é um backup do Rumo');
+    throw new Error('Este arquivo não é um backup da Rotina Mágica');
   }
   const current = storage.getItem(STORAGE_KEY);
   if (current) storage.setItem(`${STORAGE_KEY}:antes-de-restaurar`, current);

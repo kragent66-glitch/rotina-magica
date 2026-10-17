@@ -105,7 +105,7 @@ describe('treinos, noites e backup', () => {
 
     const b = memoryStorage();
     createTestRepositories(b).settings.set('workEndTime', '17:00');
-    expect(() => importData(b, '{"app":"outro"}')).toThrow('Arquivo não é um backup do Rumo');
+    expect(() => importData(b, '{"app":"outro"}')).toThrow('Este arquivo não é um backup da Rotina Mágica');
     expect(createTestRepositories(b).settings.get('workEndTime', '')).toBe('17:00');
 
     importData(b, backup);
