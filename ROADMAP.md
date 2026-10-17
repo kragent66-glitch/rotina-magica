@@ -5,8 +5,10 @@ Prioridade: o que mais ajuda em momento de crise primeiro. Detalhes e justificat
 
 ## Em andamento
 - Testar o app completo no celular, no uso real.
+- Trazer contribuidores: issues "good first issue" e "help wanted" abertas; artigo contando como o app foi feito.
 
 ## Próximos
+- Voz nas práticas guiadas: primeiro a do próprio celular (#7), depois áudio narrado publicado junto com o app (`docs/integracoes.md`).
 - Laboratório cruzando o Diário (gatilhos, quebras) com as noites sem usar.
 - Lembrete por período (manhã, Ahathoor ao meio-dia) na agenda, se a pessoa quiser mais de um.
 - Desafios semanais e modos difíceis desbloqueados por nível.

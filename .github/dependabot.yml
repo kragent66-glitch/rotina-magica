@@ -1,0 +1,24 @@
+# Atualizações mensais e agrupadas: um PR por ecossistema, só versões menores (as grandes ficam para decisão manual).
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: atualiza
+    groups:
+      dependencias:
+        patterns: ['*']
+    ignore:
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: atualiza
+    groups:
+      acoes:
+        patterns: ['*']

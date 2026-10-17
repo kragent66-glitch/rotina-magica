@@ -40,6 +40,8 @@ precisa ser barata, opcional e não atrapalhar o fluxo de crise.
 | 2026-10-17 | Rotina com ou sem ritual (`routineStyle`), mesmos ids de passo | Para servir a quem não pratica magia sem perder o histórico; versão laica usa luz da manhã, intenção do dia, relaxamento muscular progressivo |
 | 2026-10-17 | Carta do eu calmo (`letter`) abre primeiro em Ajuda agora; escondida com PIN | Pensamento de futuro e "o eu calmo prepara o eu com vontade"; na crise, a voz da própria pessoa |
 | 2026-10-17 | Tema claro (papel quente do Lições do Dia) seguindo o celular, com escolha em Ajustes; práticas guiadas sempre noturnas | Acessibilidade e leitura de dia; igual ao Templo |
+| 2026-10-17 | Integrações externas só opcionais e sem dados da pessoa; preferência por gerar no computador do mantenedor e publicar como arquivo estático (ex.: voz narrada). Avaliação em `docs/integracoes.md` | Mantém dados 100% locais e a ajuda offline, e ainda abre espaço para voz e IA generativa sem expor ninguém |
+| 2026-10-17 | Comunidade: issues "good first issue" e "help wanted", issues e PRs aceitos em inglês, Dependabot mensal (npm e Actions, sem versões major) | Atrair contribuidores externos e manter o projeto ativo para programas de código aberto. Commits dos mantenedores seguem em português |
 | 2026-10-16 | Padrão de lembretes: 1 por dia, no fim do expediente | Maior risco é depois do trabalho, sozinho e entediado; a persona não soube dizer quantos tolera |
 
 ## Arquitetura
@@ -58,7 +60,8 @@ src/platform/crypto.ts     PIN (PBKDF2) e cifra do backup (AES-GCM), via Web Cry
 src/data/backup.ts, demo.ts backup com senha; dados de exemplo do modo ?demo
 src/ui/                    estilos (styles.css, tema noite e claro por variáveis) e componentes compartilhados
 public/                    manifest.webmanifest, sw.js (offline), ícones
-.github/workflows/         ci.yml (PR) e pages.yml (publica a cada push na main)
+.github/workflows/         ci.yml (PR) e pages.yml (publica a cada push na main); .github/dependabot.yml (mensal)
+docs/                      visao-produto.md, integracoes.md (regras para serviços externos), student-pack.md, img/ do README
 .devcontainer/, .github/copilot-instructions.md   Codespaces e Copilot (Student Pack)
 ```
 Regras:
