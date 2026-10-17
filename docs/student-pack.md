@@ -12,7 +12,7 @@ ativar; se alguma pedir cartão, pare e não cadastre.
 | Benefício | O que dá ao Rumo | Como ativar | Depois do período grátis |
 |---|---|---|---|
 | **GitHub Pro** | Publicar o app no Pages a partir de repositório privado; mais minutos de Actions (CI) | Automático com a verificação de estudante | Pago quando deixar de ser estudante (hoje US$ 4/mês). Sem ele, o Pages de repositório privado para: dá para tornar o repositório público, porque os dados nunca ficam nele |
-| **GitHub Pages** | É onde o app mora: https://td9251156-creator.github.io/recomeco/ | Já ativo (Settings → Pages → GitHub Actions) | Grátis em repositório público |
+| **GitHub Pages** | É onde o app mora: https://td9251156-creator.github.io/rotina-magica/ | Já ativo (Settings → Pages → GitHub Actions) | Grátis em repositório público |
 | **Copilot (plano Student)** | Sugestões de código no VS Code ou no Codespaces. O repositório já tem `.github/copilot-instructions.md` com as regras do app | github.com/settings/copilot → ativar o plano Student | Grátis enquanto for estudante; só cobra se você assinar outro plano |
 | **Codespaces (nível Pro)** | Editar e rodar o app no navegador, sem instalar nada no PC. O repositório já tem `.devcontainer/` (Node 22, `npm install` automático) | No repositório: Code → Codespaces → Create codespace. Depois `npm run dev` e abrir a porta 5173 | Cota mensal grátis. Para nunca cobrar: Settings → Billing → Codespaces com limite de gasto 0, e pare o codespace quando terminar |
 

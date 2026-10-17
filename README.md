@@ -3,8 +3,8 @@
 **Um app de código aberto, offline e privado, para quem quer parar de usar cocaína e retomar o controle da vida.**
 Instala na tela inicial pelo navegador, funciona sem internet e **nenhum dado sai do celular**.
 
-- **Abrir o app:** https://td9251156-creator.github.io/recomeco/
-- **Ver com dados de exemplo (não toca em nada real):** https://td9251156-creator.github.io/recomeco/?demo
+- **Abrir o app:** https://td9251156-creator.github.io/rotina-magica/
+- **Ver com dados de exemplo (não toca em nada real):** https://td9251156-creator.github.io/rotina-magica/?demo
 
 <p>
   <img src="docs/img/hoje.png" width="200" alt="Tela Hoje: anel do dia, clima de hoje e botão de ajuda">
