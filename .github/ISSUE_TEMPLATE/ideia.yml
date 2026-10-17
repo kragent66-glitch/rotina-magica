@@ -1,0 +1,20 @@
+name: Ideia
+description: Sugira um recurso ou melhoria
+labels: [ideia]
+body:
+  - type: textarea
+    id: problema
+    attributes:
+      label: Que momento difícil isso ajudaria?
+      description: Ex.: a vontade depois do trabalho, o dia seguinte a uma recaída, o fim de semana.
+    validations:
+      required: true
+  - type: textarea
+    id: ideia
+    attributes:
+      label: A ideia
+  - type: textarea
+    id: evidencia
+    attributes:
+      label: Evidência (se souber)
+      description: Estudo, diretriz clínica ou experiência de tratamento que apoia a ideia.

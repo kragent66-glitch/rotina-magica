@@ -1,0 +1,66 @@
+/**
+ * Evolução: jogar e treinar dão experiência (XP), que só cresce. Nada se perde num dia ruim,
+ * como no progresso de dias sem uso. O XP mede prática de habilidades, não abstinência.
+ */
+import { daysBetween, type LocalDate } from './dates';
+
+export const GAME_IDS = ['blocos', 'desvia', 'rebate', 'onda', 'noite'] as const;
+export type GameId = (typeof GAME_IDS)[number];
+
+export const GAME_INFO: Record<GameId, { title: string; skill: string; pitch: string }> = {
+  blocos: { title: 'Blocos', skill: 'Foco', pitch: 'Encaixe peças. 3 minutos de jogo baixam a força da vontade.' },
+  desvia: { title: 'Desvia', skill: 'Reflexo', pitch: 'Empurre o que leva ao uso, puxe o que você quer. Rápido.' },
+  rebate: { title: 'Rebate', skill: 'Mente', pitch: 'Derrube os pensamentos que dão permissão para usar.' },
+  onda: { title: 'Segura a onda', skill: 'Calma', pitch: 'Respire no ritmo do dedo e veja a onda baixar.' },
+  noite: { title: 'A noite', skill: 'Decisão', pitch: 'Ensaie a sua noite de risco. Cada escolha mexe na vontade.' },
+};
+
+const XP_DIVISOR: Record<GameId, number> = { blocos: 15, desvia: 8, rebate: 8, onda: 6, noite: 9 };
+
+export function xpForGame(game: GameId, score: number): number {
+  return Math.min(120, Math.max(10, Math.round(score / XP_DIVISOR[game])));
+}
+
+export const XP_PER_TECHNIQUE = 40;
+
+/** XP para chegar ao nível L: 50·L·(L−1). Nível 2 = 100, 3 = 300, 4 = 600… */
+export function xpForLevel(level: number): number {
+  return 50 * level * (level - 1);
+}
+
+const LEVEL_NAMES = ['Começo', 'Atenção', 'Reflexo', 'Controle', 'Domínio', 'Rumo firme', 'Mestre da noite'];
+
+export function levelFor(totalXp: number): { level: number; name: string; into: number; needed: number; progress: number } {
+  let level = 1;
+  while (totalXp >= xpForLevel(level + 1)) level++;
+  const into = totalXp - xpForLevel(level);
+  const needed = xpForLevel(level + 1) - xpForLevel(level);
+  return { level, name: LEVEL_NAMES[level - 1] ?? `Nível ${level}`, into, needed, progress: into / needed };
+}
+
+export interface SessionLike {
+  gameId: string;
+  date: LocalDate;
+  score: number;
+  xp: number;
+}
+
+export function totalXp(sessions: readonly SessionLike[], techniquesDone: number): number {
+  return sessions.reduce((sum, s) => sum + s.xp, 0) + techniquesDone * XP_PER_TECHNIQUE;
+}
+
+export function bestScore(sessions: readonly SessionLike[], game: GameId): number {
+  return sessions.filter((s) => s.gameId === game).reduce((m, s) => Math.max(m, s.score), 0);
+}
+
+/** Jogo do dia: reveza entre os jogos de treino (Blocos fica para a hora da vontade e para jogar livre). */
+export function gameOfTheDay(today: LocalDate, start: LocalDate): GameId {
+  const rotation: GameId[] = ['desvia', 'rebate', 'onda', 'noite'];
+  const i = ((daysBetween(start, today) % rotation.length) + rotation.length) % rotation.length;
+  return rotation[i];
+}
+
+/** Dias diferentes com algum treino: conta para sempre, não é sequência que quebra. */
+export function trainedDays(dates: readonly LocalDate[]): number {
+  return new Set(dates).size;
+}

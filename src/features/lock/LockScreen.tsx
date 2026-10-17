@@ -1,0 +1,73 @@
+import { useState } from 'react';
+import { useData } from '@/data/provider';
+import { STORAGE_KEY } from '@/data/repositories/local';
+import { verifyPin } from '@/platform/crypto';
+import { navigate } from '@/router';
+
+/** Tela de PIN. O SOS fica sempre a um toque, sem PIN: crise não espera senha. */
+export function LockScreen({ onUnlock }: { onUnlock: () => void }) {
+  const { repos } = useData();
+  const [pin, setPin] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [forgot, setForgot] = useState(false);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    const ok = await verifyPin(pin, repos.settings.get('pinSalt', ''), repos.settings.get('pinHash', ''));
+    setBusy(false);
+    if (ok) onUnlock();
+    else {
+      setPin('');
+      setError('PIN diferente. Tente de novo.');
+    }
+  };
+
+  const eraseAll = () => {
+    if (!window.confirm('Apagar todos os dados deste celular? Depois você pode restaurar um backup.')) return;
+    window.localStorage.removeItem(STORAGE_KEY);
+    window.location.reload();
+  };
+
+  return (
+    <main className="lock">
+      <h1>Rotina Mágica</h1>
+      <form className="stack" onSubmit={submit}>
+        <label htmlFor="pin">Digite seu PIN</label>
+        <input
+          id="pin"
+          type="password"
+          inputMode="numeric"
+          autoComplete="off"
+          autoFocus
+          maxLength={8}
+          value={pin}
+          onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
+        />
+        {error && <p className="warn small">{error}</p>}
+        <button type="submit" className="btn btn--primary" disabled={pin.length < 4 || busy}>
+          Entrar
+        </button>
+      </form>
+      <button type="button" className="sos" onClick={() => navigate('sos')}>
+        Preciso de ajuda agora
+      </button>
+      {!forgot ? (
+        <button type="button" className="btn btn--ghost small" onClick={() => setForgot(true)}>
+          Esqueci o PIN
+        </button>
+      ) : (
+        <div className="card small">
+          <p>
+            O PIN não fica guardado em lugar nenhum, só um código feito a partir dele. Sem ele, o jeito é apagar os dados
+            deste celular e restaurar um backup (o backup não traz o PIN de volta).
+          </p>
+          <button type="button" className="btn btn--ghost" onClick={eraseAll}>
+            Apagar dados e recomeçar
+          </button>
+        </div>
+      )}
+    </main>
+  );
+}

@@ -1,0 +1,24 @@
+name: Problema
+description: Algo não funciona como deveria
+labels: [problema]
+body:
+  - type: markdown
+    attributes:
+      value: "Não coloque dados pessoais nem prints com dados reais. Use o modo de demonstração (`?demo`). Falha que expõe dados? Use Security → Report a vulnerability."
+  - type: textarea
+    id: oque
+    attributes:
+      label: O que aconteceu?
+      description: E o que você esperava que acontecesse.
+    validations:
+      required: true
+  - type: textarea
+    id: passos
+    attributes:
+      label: Como repetir
+      placeholder: "1. Abri Ajuda agora\n2. Toquei em…"
+  - type: input
+    id: aparelho
+    attributes:
+      label: Celular e navegador
+      placeholder: "Android 14, Chrome"

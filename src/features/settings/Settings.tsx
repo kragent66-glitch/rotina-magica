@@ -1,0 +1,361 @@
+import { useRef, useState } from 'react';
+import { useData } from '@/data/provider';
+import { makeBackup, restoreBackup } from '@/data/backup';
+import type { PlanItemKind } from '@/data/repositories/types';
+import { buildDailyReminderIcs } from '@/domain/calendar';
+import { toLocalDate } from '@/domain/dates';
+import { parseTime } from '@/domain/evening';
+import { DEFAULT_OATH, type RoutineStyle } from '@/domain/routine';
+import { hashPin, isValidPin, randomBytes, toBase64 } from '@/platform/crypto';
+import { Screen } from '@/ui/Screen';
+
+const KIT_KINDS: { kind: PlanItemKind; label: string }[] = [
+  { kind: 'se_entao', label: 'Se… então…' },
+  { kind: 'resposta', label: 'Respostas a pensamentos' },
+  { kind: 'recusa', label: 'Recusar oferta' },
+  { kind: 'filme', label: 'O filme até o fim' },
+  { kind: 'futuro', label: 'Futuro' },
+  { kind: 'barreira', label: 'Barreiras' },
+  { kind: 'razao', label: 'Razões' },
+];
+
+function download(name: string, content: string, type: string) {
+  const url = URL.createObjectURL(new Blob([content], { type }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+export function Settings({ onEditPlans }: { onBack?: () => void; onEditPlans: () => void }) {
+  const { repos, write } = useData();
+  const [time, setTime] = useState(() => repos.settings.get('workEndTime', '18:00'));
+  const [spend, setSpend] = useState(() => String(repos.settings.get<number | null>('weeklySpending', null) ?? ''));
+  const [msg, setMsg] = useState<string | null>(null);
+  const [password, setPassword] = useState('');
+  const [pin, setPin] = useState('');
+  const [pin2, setPin2] = useState('');
+  const [confirmRemove, setConfirmRemove] = useState<string | null>(null);
+  const file = useRef<HTMLInputElement>(null);
+  const parsed = parseTime(time);
+  const appUrl = window.location.href.split('#')[0];
+
+  const saveTime = () => {
+    if (!parsed) return;
+    write((r) => r.settings.set('workEndTime', parsed));
+    setTime(parsed);
+    setMsg(`Horário salvo: ${parsed}. Se já tinha lembrete na agenda, apague o antigo e adicione de novo.`);
+  };
+
+  const addReminder = () => {
+    download('rumo-lembrete.ics', buildDailyReminderIcs({ time: parsed ?? '18:00', url: appUrl, now: new Date() }), 'text/calendar');
+    write((r) => r.settings.set('reminderAddedAt', new Date().toISOString()));
+    setMsg('Abra o arquivo baixado e escolha sua agenda (Google Agenda). O alarme vai tocar de segunda a sexta.');
+  };
+
+  const backup = async () => {
+    const file = await makeBackup(window.localStorage, new Date(), password || undefined);
+    download(`rumo-backup-${toLocalDate(new Date())}${password ? '-com-senha' : ''}.json`, file, 'application/json');
+    write((r) => r.settings.set('lastBackupAt', new Date().toISOString()));
+    setMsg(
+      password
+        ? 'Backup com senha baixado. Sem a senha ninguém abre, nem você: anote num lugar seguro.'
+        : 'Backup baixado. Guarde num lugar seu (Drive, e-mail para você mesmo).',
+    );
+  };
+
+  const restore = async (f: File) => {
+    try {
+      await restoreBackup(window.localStorage, await f.text(), password || undefined);
+      window.location.reload();
+    } catch (e) {
+      setMsg((e as Error).message);
+    }
+  };
+
+  const hasPin = !!repos.settings.get<string | null>('pinHash', null);
+  const savePin = async () => {
+    if (!isValidPin(pin) || pin !== pin2) return;
+    const salt = randomBytes(16);
+    const hash = await hashPin(pin, salt);
+    write((r) => {
+      r.settings.set('pinSalt', toBase64(salt));
+      r.settings.set('pinHash', hash);
+    });
+    setPin('');
+    setPin2('');
+    setMsg('PIN ativado. Vai ser pedido ao abrir o app e depois de 2 minutos fora dele.');
+  };
+  const removePin = () => {
+    write((r) => {
+      r.settings.set('pinHash', null);
+      r.settings.set('pinSalt', null);
+    });
+    setMsg('PIN desativado.');
+  };
+
+  const lastBackup = repos.settings.get<string | null>('lastBackupAt', null);
+
+  return (
+    <Screen title="Ajustes" className="screen--tabs">
+      {msg && (
+        <p className="card card--accent" role="status">
+          {msg}
+        </p>
+      )}
+
+      <StyleCard />
+      <OathCard />
+      <LetterCard />
+      <ThemeCard />
+
+      <section className="card">
+        <h2>Lembrete na saída do trabalho</h2>
+        <p className="small muted">
+          O app é um site instalado e não consegue tocar alarme sozinho. A agenda do celular consegue: adicionamos um evento discreto
+          com o link do app.
+        </p>
+        <label className="field">
+          Horário que você sai
+          <input inputMode="numeric" value={time} onChange={(e) => setTime(e.target.value)} />
+        </label>
+        {!parsed && <p className="warn small">Não entendi esse horário. Tente 18:30.</p>}
+        <div className="row">
+          <button type="button" className="btn btn--ghost" disabled={!parsed} onClick={saveTime}>
+            Salvar horário
+          </button>
+          <button type="button" className="btn" disabled={!parsed} onClick={addReminder}>
+            Adicionar na agenda
+          </button>
+        </div>
+      </section>
+
+      <section className="card">
+        <h2>Gasto médio por semana (opcional)</h2>
+        <p className="small muted">Só para mostrar no laboratório quanto dinheiro ficou com você. Fica só no celular.</p>
+        <div className="inline">
+          <input inputMode="numeric" placeholder="R$" value={spend} onChange={(e) => setSpend(e.target.value.replace(/\D/g, ''))} />
+          <button
+            type="button"
+            className="btn btn--ghost"
+            onClick={() => {
+              write((r) => r.settings.set('weeklySpending', spend ? Number(spend) : null));
+              setMsg('Salvo.');
+            }}
+          >
+            Salvar
+          </button>
+        </div>
+      </section>
+
+      <section className="card">
+        <h2>Seus dados</h2>
+        <p className="small muted">
+          Tudo fica só neste celular, sem conta e sem nuvem. Se o navegador for limpo, os dados somem: faça backup de vez em
+          quando.{lastBackup ? ` Último backup: ${new Date(lastBackup).toLocaleDateString('pt-BR')}.` : ''}
+        </p>
+        <label className="small" htmlFor="backup-pass">
+          Senha do backup (opcional, cifra o arquivo)
+        </label>
+        <input id="backup-pass" type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} />
+        <div className="row">
+          <button type="button" className="btn" onClick={backup}>
+            Baixar backup
+          </button>
+          <button type="button" className="btn btn--ghost" onClick={() => file.current?.click()}>
+            Restaurar
+          </button>
+        </div>
+        <input
+          ref={file}
+          type="file"
+          accept="application/json,.json"
+          hidden
+          onChange={(e) => e.target.files?.[0] && restore(e.target.files[0])}
+        />
+      </section>
+
+      <section className="card">
+        <h2>Bloqueio com PIN</h2>
+        <p className="small muted">
+          {hasPin
+            ? 'Ativo. O botão de ajuda continua abrindo sem PIN, mas sem mostrar o que você escreveu.'
+            : 'Para ninguém abrir o app se pegar o seu celular. O botão de ajuda continua abrindo sem PIN.'}
+        </p>
+        {hasPin ? (
+          <button type="button" className="btn btn--ghost" onClick={removePin}>
+            Desativar PIN
+          </button>
+        ) : (
+          <>
+            <label className="small" htmlFor="pin-new">
+              Novo PIN (4 a 8 números)
+            </label>
+            <input id="pin-new" type="password" inputMode="numeric" maxLength={8} value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))} />
+            <label className="small" htmlFor="pin-again">
+              Repita o PIN
+            </label>
+            <input id="pin-again" type="password" inputMode="numeric" maxLength={8} value={pin2} onChange={(e) => setPin2(e.target.value.replace(/\D/g, ''))} />
+            <button type="button" className="btn" disabled={!isValidPin(pin) || pin !== pin2} onClick={savePin}>
+              Ativar PIN
+            </button>
+          </>
+        )}
+      </section>
+
+      <section className="card">
+        <h2>Seu kit</h2>
+        <p className="small muted">O que aparece no SOS. Vem dos treinos e do primeiro uso.</p>
+        {KIT_KINDS.map(({ kind, label }) => {
+          const items = repos.plan.list(kind);
+          if (!items.length) return null;
+          return (
+            <div key={kind}>
+              <h3>{label}</h3>
+              <ul className="stack">
+                {items.map((i) => (
+                  <li key={i.id} className="kit-item">
+                    <span>
+                      {typeof i.extra?.thought === 'string' && <span className="muted small">"{i.extra.thought}" → </span>}
+                      {i.text}
+                    </span>
+                    <button
+                      type="button"
+                      className={`link small${confirmRemove === i.id ? ' warn' : ''}`}
+                      aria-label={confirmRemove === i.id ? `Confirmar remoção de ${i.text}` : `Remover ${i.text}`}
+                      onClick={() => {
+                        // Dois toques: o kit é escrito com calma e não pode sumir com um toque sem querer.
+                        if (confirmRemove !== i.id) return setConfirmRemove(i.id);
+                        write((r) => r.plan.remove(i.id));
+                        setConfirmRemove(null);
+                      }}
+                    >
+                      {confirmRemove === i.id ? 'Confirmar' : 'Remover'}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          );
+        })}
+        <button type="button" className="link" onClick={onEditPlans}>
+          Refazer primeiro uso (atividades, razões e planos de noite)
+        </button>
+      </section>
+
+      <p className="small muted center">
+        Quer ajuda de gente também? O CAPS AD atende de graça pelo SUS, sem encaminhamento. CVV: 188, 24h.
+      </p>
+    </Screen>
+  );
+}
+
+/** O compromisso é da pessoa: o texto padrão é só um ponto de partida. */
+function OathCard() {
+  const { repos, write } = useData();
+  const [text, setText] = useState(() => repos.settings.get('oath', DEFAULT_OATH));
+  const [ok, setOk] = useState(false);
+  return (
+    <section className="card">
+      <h2>Meu compromisso</h2>
+      <p className="small muted">Lido toda manhã no espelho. Escreva com as suas palavras: o que você quer para a sua vida e por quê.</p>
+      <textarea rows={6} value={text} aria-label="Texto do compromisso" onChange={(e) => (setText(e.target.value), setOk(false))} />
+      <div className="row">
+        <button type="button" className="btn" onClick={() => (write((r) => r.settings.set('oath', text.trim() || DEFAULT_OATH)), setOk(true))}>
+          Guardar compromisso
+        </button>
+        <button type="button" className="btn btn--ghost" onClick={() => setText(DEFAULT_OATH)}>
+          Texto padrão
+        </button>
+      </div>
+      {ok && <p className="small">Guardado.</p>}
+    </section>
+  );
+}
+
+function Choice<T extends string>({ value, options, onPick, label }: { value: T; options: { id: T; title: string; text: string }[]; onPick: (v: T) => void; label: string }) {
+  return (
+    <div className="stack" role="radiogroup" aria-label={label}>
+      {options.map((o) => (
+        <button key={o.id} type="button" role="radio" aria-checked={value === o.id} className={`trap${value === o.id ? ' trap--on' : ''}`} onClick={() => onPick(o.id)}>
+          <strong>{o.title}</strong>
+          <span className="muted small">{o.text}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/** Com ou sem ritual: os passos e o histórico são os mesmos, muda o que cada passo pede. */
+function StyleCard() {
+  const { repos, write } = useData();
+  const style = repos.settings.get<RoutineStyle>('routineStyle', 'magica');
+  return (
+    <section className="card">
+      <h2>Estilo da rotina</h2>
+      <Choice
+        label="Estilo da rotina"
+        value={style}
+        onPick={(v) => write((r) => r.settings.set('routineStyle', v))}
+        options={[
+          { id: 'magica', title: 'Rotina mágica', text: 'Saudações ao Sol, ritual do pentagrama e Pilar do Meio, explicados em palavras simples.' },
+          { id: 'simples', title: 'Rotina simples', text: 'Os mesmos horários sem ritual: luz da manhã, intenção do dia, relaxamento guiado.' },
+        ]}
+      />
+    </section>
+  );
+}
+
+/** O eu calmo escreve para o eu com vontade: a carta abre primeiro na Ajuda agora. */
+function LetterCard() {
+  const { repos, write } = useData();
+  const [text, setText] = useState(() => repos.settings.get('letter', ''));
+  const [ok, setOk] = useState(false);
+  return (
+    <section className="card">
+      <h2>Carta para o momento difícil</h2>
+      <p className="small muted">
+        Escreva agora, com calma, para você mesmo no momento da vontade. Ela aparece primeiro em Ajuda agora (e fica escondida se o app estiver
+        trancado com PIN).
+      </p>
+      <textarea
+        rows={5}
+        value={text}
+        aria-label="Carta para o momento difícil"
+        placeholder="Ex.: Ei, eu sei que está pesado. Lembra de como você acorda depois? Respira, toma um banho, a vontade passa."
+        onChange={(e) => (setText(e.target.value), setOk(false))}
+      />
+      <button type="button" className="btn" onClick={() => (write((r) => r.settings.set('letter', text.trim())), setOk(true))}>
+        Guardar carta
+      </button>
+      {ok && <p className="small">Guardada. Ela vai estar lá quando você precisar.</p>}
+    </section>
+  );
+}
+
+function ThemeCard() {
+  const { repos, write } = useData();
+  const theme = repos.settings.get<'auto' | 'claro' | 'noite'>('theme', 'auto');
+  return (
+    <section className="card">
+      <h2>Aparência</h2>
+      <div className="seg" role="radiogroup" aria-label="Aparência">
+        {(
+          [
+            ['auto', 'Automático'],
+            ['claro', 'Claro'],
+            ['noite', 'Noite'],
+          ] as const
+        ).map(([id, title]) => (
+          <button key={id} type="button" role="radio" aria-checked={theme === id} className={theme === id ? 'on' : ''} onClick={() => write((r) => r.settings.set('theme', id))}>
+            {title}
+          </button>
+        ))}
+      </div>
+      <p className="small muted">Automático segue o celular. As práticas guiadas ficam sempre noturnas.</p>
+    </section>
+  );
+}

@@ -1,0 +1,251 @@
+import { useState } from 'react';
+import { useData } from '@/data/provider';
+import { needsBackup } from '@/domain/backup-nudge';
+import { isCareMode } from '@/domain/care';
+import { addDays, toLocalDate } from '@/domain/dates';
+import { forecastFor, forecastText } from '@/domain/forecast';
+import { DEFAULT_OATH, lastWeekCount, periodFor, routineDays, routineFor, type RoutineStep, type RoutineStyle } from '@/domain/routine';
+import { navigate } from '@/router';
+import { BlocksIcon, BookIcon, Chevron, KnotIcon, TriangleIcon } from '@/ui/icons';
+import { TonightCard } from '../evening/TonightCard';
+import { CareCard } from '../home/CareCard';
+import { MorningCard } from '../home/MorningCard';
+import { StepIcon } from './StepIcon';
+
+const GREETING = {
+  manha: 'Bom dia. Comece o dia no controle: poucos minutos fazem diferença.',
+  tarde: 'Boa tarde. Se a vontade aparecer, a ajuda está a um toque.',
+  noite: 'Boa noite. Hora de descarregar o dia, escrever e descansar.',
+} as const;
+
+/** Tela inicial: a rotina do dia em três tempos, com o período atual em destaque. */
+export function Routine() {
+  const { repos, write } = useData();
+  const now = new Date();
+  const today = toLocalDate(now);
+  const current = periodFor(now, repos.settings.get('workEndTime', '18:00'));
+  const done = new Set(repos.routine.doneOn(today));
+  const active = repos.routine.activeDates();
+  const care = isCareMode(repos.useEvents.lastOccurredAt(), now);
+  const oath = repos.settings.get('oath', DEFAULT_OATH);
+  const startDate = repos.settings.get('trackingStartDate', today);
+  const lastBackup = repos.settings.get<string | null>('lastBackupAt', null);
+  const backupDue = needsBackup(today, startDate, lastBackup ? toLocalDate(new Date(lastBackup)) : null, repos.settings.get<string | null>('backupSnoozeUntil', null));
+  const chosenStyle = repos.settings.get<RoutineStyle | null>('routineStyle', null);
+  const ROUTINE = routineFor(chosenStyle ?? 'magica');
+  const ALL_STEPS = ROUTINE.flatMap((p) => p.steps);
+  const forecast = forecastFor({
+    today,
+    journal: repos.journal.listBetween(addDays(today, -56), today),
+    cravings: repos.cravings.listBetween(addDays(today, -56), today),
+    useDates: repos.useEvents.useDatesBetween(addDays(today, -56), today),
+  });
+  const count = ALL_STEPS.filter((s) => done.has(s.id)).length;
+  const days = routineDays(active);
+  const [open, setOpen] = useState<Set<string>>(() => new Set([current]));
+  const toggleOpen = (id: string) => setOpen((o) => new Set(o.has(id) ? [...o].filter((x) => x !== id) : [...o, id]));
+  const periodNow = ROUTINE.find((p) => p.id === current)!;
+  const next = periodNow.steps.find((s) => !done.has(s.id)) ?? ALL_STEPS.find((s) => !done.has(s.id));
+  const pct = Math.round((count / ALL_STEPS.length) * 100);
+  const openStep = (s: RoutineStep) => (s.link === 'diario' ? navigate('diario') : navigate('rotina', s.id));
+
+  return (
+    <main className="screen screen--tabs">
+      <header className="hero">
+        <h1>Rotina Mágica</h1>
+        <p className="tagline">Retome o controle da sua vida, um dia de cada vez.</p>
+      </header>
+
+      <section className="today" aria-label="Progresso">
+        <div className="ring" style={{ ['--pct' as string]: `${pct}%` }} role="img" aria-label={`${count} de ${ALL_STEPS.length} passos hoje`}>
+          <strong>{count}</strong>
+          <span>de {ALL_STEPS.length}</span>
+        </div>
+        <div className="today__text">
+          <p>{GREETING[current]}</p>
+          <p className="muted small">
+            {lastWeekCount(active, today)} de 7 dias na semana · {days} {days === 1 ? 'dia' : 'dias'} de rotina no total
+          </p>
+        </div>
+      </section>
+
+      <section className={`forecast forecast--${forecast?.level ?? 'aprendendo'}`} aria-label="Clima de hoje">
+        <span className="forecast__dot" aria-hidden="true" />
+        <div>
+          <p className="eyebrow">
+            Clima de hoje · {forecast ? { calmo: 'tranquilo', atencao: 'atenção', alto: 'cuidado redobrado' }[forecast.level] : 'aprendendo'}
+          </p>
+          {forecast ? (
+            <>
+              <p>{forecastText(forecast)}</p>
+              {(forecast.peakHour !== null || forecast.topTrigger) && (
+                <p className="muted small">
+                  {forecast.peakHour !== null && `A vontade costuma apertar perto das ${forecast.peakHour}h: tenha algo marcado para essa hora. `}
+                  {forecast.topTrigger && `Gatilho mais comum: ${forecast.topTrigger.toLowerCase()}.`}
+                </p>
+              )}
+            </>
+          ) : (
+            <p className="muted small">Com alguns dias de diário, o app aprende quais dias e horários pedem mais cuidado. Tudo calculado aqui no celular.</p>
+          )}
+        </div>
+      </section>
+
+      {care && <CareCard onUnderstand={() => navigate('usei', 'entender')} />}
+      <MorningCard />
+
+      <button type="button" className="sos" onClick={() => navigate('sos')}>
+        Bateu vontade?
+        <span>Ajuda agora</span>
+      </button>
+
+      {next && (
+        <button type="button" className="next" onClick={() => openStep(next)}>
+          <span className="eyebrow">Próximo passo · {next.minutes} min</span>
+          <span className="next__row">
+            <span className="item__icon">
+              <StepIcon step={next} />
+            </span>
+            <span className="item__text">
+              <strong>{next.title}</strong>
+              <span className="muted small">{next.summary}</span>
+            </span>
+            <Chevron />
+          </span>
+        </button>
+      )}
+      {!next && <p className="card card--accent center">Rotina completa hoje. Isso é cuidar de você.</p>}
+
+      {chosenStyle === null && (
+        <section className="card card--accent">
+          <h2>Como você quer a sua rotina?</h2>
+          <p className="small muted">Os horários são os mesmos. Dá para trocar depois em Ajustes.</p>
+          <div className="row">
+            <button type="button" className="btn" onClick={() => write((r) => r.settings.set('routineStyle', 'magica'))}>
+              Com ritual
+            </button>
+            <button type="button" className="btn btn--ghost" onClick={() => write((r) => r.settings.set('routineStyle', 'simples'))}>
+              Sem ritual
+            </button>
+          </div>
+        </section>
+      )}
+
+      <button type="button" className="oath" onClick={() => navigate('rotina', 'm_juramento')}>
+        <span className="eyebrow">Meu compromisso</span>
+        <span className="oath__text">{oath}</span>
+      </button>
+
+      {ROUTINE.map((p) => {
+        const n = p.steps.filter((s) => done.has(s.id)).length;
+        return (
+          <section key={p.id} className={`period${p.id === current ? ' period--now' : ''}`} aria-label={p.title}>
+            <button type="button" className="period__head" aria-expanded={open.has(p.id)} onClick={() => toggleOpen(p.id)}>
+              <h2>
+                {p.title} <span className="period__name">· {p.name}</span>
+              </h2>
+              <span className="muted small">
+                {p.id === current ? 'agora · ' : ''}
+                {n}/{p.steps.length} {open.has(p.id) ? '▴' : '▾'}
+              </span>
+            </button>
+            {open.has(p.id) && (
+              <>
+            <p className="muted small">{p.purpose}</p>
+            <div className="list">
+              {p.steps.map((s) => (
+                <div key={s.id} className={`item${done.has(s.id) ? ' item--done' : ''}`}>
+                  <button
+                    type="button"
+                    className="item__check"
+                    aria-pressed={done.has(s.id)}
+                    aria-label={`Marcar ${s.title}`}
+                    onClick={() => write((r) => r.routine.toggle(today, s.id))}
+                  >
+                    {done.has(s.id) ? '✓' : ''}
+                  </button>
+                  <button type="button" className="item__body" onClick={() => openStep(s)}>
+                    <span className="item__icon">
+                      <StepIcon step={s} />
+                    </span>
+                    <span className="item__text">
+                      <strong>{s.title}</strong>
+                      <span className="muted small">
+                        {s.summary} · {s.minutes} min
+                      </span>
+                    </span>
+                    <Chevron />
+                  </button>
+                </div>
+              ))}
+            </div>
+              </>
+            )}
+            {p.id === 'tarde' && !care && <TonightCard />}
+          </section>
+        );
+      })}
+
+      {backupDue && (
+        <section className="card nudge">
+          <h2>Guarde uma cópia</h2>
+          <p className="small muted">Seu progresso só existe neste celular. Se o navegador for limpo, ele some. Um backup leva 10 segundos.</p>
+          <div className="row">
+            <button type="button" className="btn" onClick={() => navigate('ajustes')}>
+              Fazer backup
+            </button>
+            <button type="button" className="btn btn--ghost" onClick={() => write((r) => r.settings.set('backupSnoozeUntil', addDays(today, 7)))}>
+              Agora não
+            </button>
+          </div>
+        </section>
+      )}
+
+      <section>
+        <h2>Mais ferramentas</h2>
+        <div className="list">
+          <button type="button" className="item__body item__body--solo" onClick={() => navigate('pensamento')}>
+            <span className="item__icon">
+              <KnotIcon />
+            </span>
+            <span className="item__text">
+              <strong>Desatar um pensamento</strong>
+              <span className="muted small">Quando a cabeça insiste: corpo, emoção, pensamento e resposta</span>
+            </span>
+            <Chevron />
+          </button>
+          <button type="button" className="item__body item__body--solo" onClick={() => navigate('jogos')}>
+            <span className="item__icon">
+              <BlocksIcon />
+            </span>
+            <span className="item__text">
+              <strong>Jogos</strong>
+              <span className="muted small">Blocos, Desvia, Rebate, Segura a onda e A noite</span>
+            </span>
+            <Chevron />
+          </button>
+          <button type="button" className="item__body item__body--solo" onClick={() => navigate('treino')}>
+            <span className="item__icon">
+              <TriangleIcon />
+            </span>
+            <span className="item__text">
+              <strong>Treinos de mente</strong>
+              <span className="muted small">Preparar respostas para quando a vontade vier</span>
+            </span>
+            <Chevron />
+          </button>
+          <button type="button" className="item__body item__body--solo" onClick={() => navigate('lab')}>
+            <span className="item__icon">
+              <BookIcon />
+            </span>
+            <span className="item__text">
+              <strong>Seu laboratório</strong>
+              <span className="muted small">O que funcionou com você, com os seus dados</span>
+            </span>
+            <Chevron />
+          </button>
+        </div>
+      </section>
+    </main>
+  );
+}
