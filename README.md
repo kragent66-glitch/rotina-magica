@@ -1,5 +1,9 @@
 # Rotina Mágica
 
+[![CI](https://github.com/td9251156-creator/rotina-magica/actions/workflows/ci.yml/badge.svg)](https://github.com/td9251156-creator/rotina-magica/actions/workflows/ci.yml)
+[![Licença MIT](https://img.shields.io/badge/licen%C3%A7a-MIT-c9a45c)](LICENSE)
+[![good first issues](https://img.shields.io/github/issues/td9251156-creator/rotina-magica/good%20first%20issue?label=good%20first%20issues&color=67bb80)](https://github.com/td9251156-creator/rotina-magica/labels/good%20first%20issue)
+
 **Um app de código aberto, offline e privado, para quem quer parar de usar cocaína e retomar o controle da vida.**
 Instala na tela inicial pelo navegador, funciona sem internet e **nenhum dado sai do celular**.
 
@@ -12,6 +16,14 @@ Instala na tela inicial pelo navegador, funciona sem internet e **nenhum dado sa
   <img src="docs/img/pensamento.png" width="200" alt="Desatar um pensamento: armadilhas do pensamento com a pergunta que desmonta">
   <img src="docs/img/hoje-claro.png" width="200" alt="Tela Hoje no tema claro">
 </p>
+
+## Como usar
+
+1. No celular, abra o link no Chrome (Android) ou no Safari (iPhone).
+2. Instale: menu ⋮ → **Adicionar à tela inicial** (no iPhone: Compartilhar → **Adicionar à Tela de Início**).
+3. Na hora da vontade, toque em **Ajuda agora**. No Android, segurar o ícone do app e tocar em **Agora** leva direto.
+
+Não precisa de conta nem de internet depois de instalado. Para trocar de celular, use o backup com senha em Ajustes.
 
 > Este app não substitui tratamento. Em crise: **CVV 188** (24 h, gratuito, também por chat), **SAMU 192**.
 > O **CAPS AD** da sua cidade atende de graça pelo SUS, sem encaminhamento.
@@ -58,7 +70,15 @@ Tudo fica no `localStorage` do aparelho. O site é estático (GitHub Pages), sem
 sem crash reporting. Com PIN ativo, "Ajuda agora" abre sem pedir o PIN, mas esconde tudo o que você escreveu.
 Mais em [`SECURITY.md`](SECURITY.md).
 
-## Rodar e contribuir
+## Quero ajudar
+
+- **Programo**: comece por uma issue [good first issue](https://github.com/td9251156-creator/rotina-magica/labels/good%20first%20issue). O passo a passo está em [CONTRIBUTING.md](CONTRIBUTING.md).
+- **Trabalho com saúde mental ou dependência**: revise os textos e as técnicas ([issue #9](https://github.com/td9251156-creator/rotina-magica/issues/9)).
+- **Falo outro idioma**: ajude a traduzir ([README em inglês, #5](https://github.com/td9251156-creator/rotina-magica/issues/5) e [interface, #8](https://github.com/td9251156-creator/rotina-magica/issues/8)).
+- **Uso o app**: conte o que ajudou e o que atrapalhou numa [issue de ideia](https://github.com/td9251156-creator/rotina-magica/issues/new/choose). Não coloque dados pessoais.
+- Integrações com serviços externos seguem regras próprias: [`docs/integracoes.md`](docs/integracoes.md).
+
+## Rodar o código
 
 ```bash
 npm install
@@ -81,3 +101,5 @@ practice), forecasts the day's risk from the user's own on-device data, guides t
 progressive muscle relaxation, imagery), offers a CBT thought record with 11 thinking traps, and opens crisis help in
 two taps without a PIN, starting with a letter the user wrote to themselves in a calm moment. Progress never resets.
 No accounts, no servers, no analytics. Try it with sample data: add `?demo` to the URL.
+
+**Contributing:** issues and pull requests in English are welcome. Good starting points: [good first issues](https://github.com/td9251156-creator/rotina-magica/labels/good%20first%20issue).

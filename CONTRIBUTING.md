@@ -16,6 +16,28 @@ uma pergunta só:
 4. **Linguagem simples.** Sem jargão clínico nem esotérico sem explicação.
 5. **Discrição.** Notificações e lembretes não mencionam droga nem recaída.
 
+## Primeira contribuição, passo a passo
+
+1. Escolha uma issue com a etiqueta [good first issue](https://github.com/td9251156-creator/rotina-magica/labels/good%20first%20issue) e comente
+   "quero fazer", para ninguém repetir o trabalho.
+2. Clique em **Fork** no GitHub e clone o seu fork:
+   ```bash
+   git clone https://github.com/<seu-usuario>/rotina-magica.git
+   cd rotina-magica
+   npm install
+   git switch -c corrige-mensagem-backup
+   ```
+3. Faça a mudança e confira: `npm run typecheck && npm test && npm run build`.
+4. Envie: `git commit -m "corrige nome na mensagem de backup"` e `git push -u origin corrige-mensagem-backup`.
+5. No GitHub, abra o pull request para a `main` deste repositório. O modelo pede o antes e o depois e uma lista
+   de conferência. A verificação automática roda sozinha; com ela verde e a revisão aprovada, o PR é mesclado e o
+   site é publicado.
+
+Travou em algum passo? Comente na própria issue.
+
+**Idioma:** o app é em português do Brasil. Issues e PRs podem ser em português ou inglês
+(issues and pull requests in English are welcome).
+
 ## Começando
 
 Requisitos: Node.js 22 LTS.
@@ -42,7 +64,7 @@ Também abre pronto no GitHub Codespaces (`.devcontainer/`).
 ## Fluxo
 
 1. Abra uma issue (ideia ou problema) antes de mudanças grandes.
-2. Crie um branch, faça commits pequenos **em português, no imperativo**: `adiciona …`, `corrige …`.
+2. Crie um branch e faça commits pequenos, com mensagens claras no imperativo (de preferência em português): `adiciona …`, `corrige …`.
 3. Antes do PR: `npm run typecheck && npm test && npm run build`.
 4. No PR, conte o antes e o depois em linguagem simples e, se for recurso novo, a evidência por trás.
 
@@ -50,6 +72,10 @@ Também abre pronto no GitHub Codespaces (`.devcontainer/`).
 
 Cite a fonte no PR e, se for uma decisão de produto, no [`docs/visao-produto.md`](docs/visao-produto.md).
 Funcionalidades sem evidência sólida entram como opcionais.
+
+## Integrações
+
+Serviços externos (voz, IA generativa, sensores) só entram seguindo as regras de [`docs/integracoes.md`](docs/integracoes.md).
 
 ## Conteúdo sensível
 
