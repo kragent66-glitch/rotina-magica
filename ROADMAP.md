@@ -21,6 +21,9 @@ Prioridade: o que mais ajuda em momento de crise primeiro. Detalhes e justificat
 - ~~Recompensas~~: recusadas pelo autor; dinheiro mantido só como informação.
 
 ## Feito
+- 2026-10-17 — Visual e facilidade de uso: Ajustes curtos (itens que abrem e fecham), passos da rotina num cartão só com
+  check mais visível, barra de progresso por período, data no topo, ferramentas em grade, aba ativa destacada, botão
+  Instalar, "Falar com alguém agora" no topo da Ajuda agora e técnicas com nomes simples. 132 testes.
 - 2026-10-17 — Clima de hoje (previsão de risco com os dados do aparelho), rotina com ou sem ritual, relaxamento muscular
   progressivo guiado, carta do eu calmo na Ajuda agora, tema claro seguindo o celular, e o projeto pronto para código
   aberto (MIT, CONTRIBUTING, código de conduta, SECURITY, modelos de issue e PR, README novo com imagens). 131 testes.

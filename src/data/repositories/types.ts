@@ -225,7 +225,8 @@ export type SettingKey =
   | 'oath'
   | 'routineStyle'
   | 'letter'
-  | 'theme';
+  | 'theme'
+  | 'installDismissed';
 
 export interface Repositories {
   routine: RoutineRepository;

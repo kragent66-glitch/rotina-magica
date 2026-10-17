@@ -7,7 +7,9 @@ import { toLocalDate } from '@/domain/dates';
 import { parseTime } from '@/domain/evening';
 import { DEFAULT_OATH, type RoutineStyle } from '@/domain/routine';
 import { hashPin, isValidPin, randomBytes, toBase64 } from '@/platform/crypto';
+import { useInstall } from '@/platform/install';
 import { Screen } from '@/ui/Screen';
+import { Setting } from '@/ui/Setting';
 
 const KIT_KINDS: { kind: PlanItemKind; label: string }[] = [
   { kind: 'se_entao', label: 'Se… então…' },
@@ -77,6 +79,7 @@ export function Settings({ onEditPlans }: { onBack?: () => void; onEditPlans: ()
   };
 
   const hasPin = !!repos.settings.get<string | null>('pinHash', null);
+  const { canInstall, install } = useInstall();
   const savePin = async () => {
     if (!isValidPin(pin) || pin !== pin2) return;
     const salt = randomBytes(16);
@@ -107,13 +110,23 @@ export function Settings({ onEditPlans }: { onBack?: () => void; onEditPlans: ()
         </p>
       )}
 
+      <p className="eyebrow group">Sua rotina</p>
       <StyleCard />
       <OathCard />
       <LetterCard />
-      <ThemeCard />
 
-      <section className="card">
-        <h2>Lembrete na saída do trabalho</h2>
+      <p className="eyebrow group">Aparência e lembrete</p>
+      <ThemeCard />
+      {canInstall && (
+        <Setting title="Instalar na tela inicial" hint="Abre mais rápido e funciona sem internet">
+          <p className="small muted">O app vai para a tela inicial como qualquer outro, e o atalho de ajuda aparece ao segurar o ícone.</p>
+          <button type="button" className="btn" onClick={install}>
+            Instalar
+          </button>
+        </Setting>
+      )}
+
+      <Setting title="Lembrete na saída do trabalho" hint="Um evento discreto na agenda do celular">
         <p className="small muted">
           O app é um site instalado e não consegue tocar alarme sozinho. A agenda do celular consegue: adicionamos um evento discreto
           com o link do app.
@@ -131,10 +144,10 @@ export function Settings({ onEditPlans }: { onBack?: () => void; onEditPlans: ()
             Adicionar na agenda
           </button>
         </div>
-      </section>
+      </Setting>
 
-      <section className="card">
-        <h2>Gasto médio por semana (opcional)</h2>
+      <p className="eyebrow group">Seus dados e privacidade</p>
+      <Setting title="Gasto médio por semana (opcional)" hint="Para o laboratório mostrar quanto ficou com você">
         <p className="small muted">Só para mostrar no laboratório quanto dinheiro ficou com você. Fica só no celular.</p>
         <div className="inline">
           <input inputMode="numeric" placeholder="R$" value={spend} onChange={(e) => setSpend(e.target.value.replace(/\D/g, ''))} />
@@ -149,10 +162,9 @@ export function Settings({ onEditPlans }: { onBack?: () => void; onEditPlans: ()
             Salvar
           </button>
         </div>
-      </section>
+      </Setting>
 
-      <section className="card">
-        <h2>Seus dados</h2>
+      <Setting title="Seus dados" hint={lastBackup ? `Último backup: ${new Date(lastBackup).toLocaleDateString('pt-BR')}` : 'Faça um backup com senha'}>
         <p className="small muted">
           Tudo fica só neste celular, sem conta e sem nuvem. Se o navegador for limpo, os dados somem: faça backup de vez em
           quando.{lastBackup ? ` Último backup: ${new Date(lastBackup).toLocaleDateString('pt-BR')}.` : ''}
@@ -176,10 +188,9 @@ export function Settings({ onEditPlans }: { onBack?: () => void; onEditPlans: ()
           hidden
           onChange={(e) => e.target.files?.[0] && restore(e.target.files[0])}
         />
-      </section>
+      </Setting>
 
-      <section className="card">
-        <h2>Bloqueio com PIN</h2>
+      <Setting title="Bloqueio com PIN" hint={hasPin ? 'Ativado' : 'Desligado'}>
         <p className="small muted">
           {hasPin
             ? 'Ativo. O botão de ajuda continua abrindo sem PIN, mas sem mostrar o que você escreveu.'
@@ -204,10 +215,10 @@ export function Settings({ onEditPlans }: { onBack?: () => void; onEditPlans: ()
             </button>
           </>
         )}
-      </section>
+      </Setting>
 
-      <section className="card">
-        <h2>Seu kit</h2>
+      <p className="eyebrow group">Ajuda agora</p>
+      <Setting title="Seu kit" hint="O que aparece na Ajuda agora">
         <p className="small muted">O que aparece no SOS. Vem dos treinos e do primeiro uso.</p>
         {KIT_KINDS.map(({ kind, label }) => {
           const items = repos.plan.list(kind);
@@ -244,7 +255,7 @@ export function Settings({ onEditPlans }: { onBack?: () => void; onEditPlans: ()
         <button type="button" className="link" onClick={onEditPlans}>
           Refazer primeiro uso (atividades, razões e planos de noite)
         </button>
-      </section>
+      </Setting>
 
       <p className="small muted center">
         Quer ajuda de gente também? O CAPS AD atende de graça pelo SUS, sem encaminhamento. CVV: 188, 24h.
@@ -259,8 +270,7 @@ function OathCard() {
   const [text, setText] = useState(() => repos.settings.get('oath', DEFAULT_OATH));
   const [ok, setOk] = useState(false);
   return (
-    <section className="card">
-      <h2>Meu compromisso</h2>
+    <Setting title="Meu compromisso" hint="Lido toda manhã, com as suas palavras">
       <p className="small muted">Lido toda manhã no espelho. Escreva com as suas palavras: o que você quer para a sua vida e por quê.</p>
       <textarea rows={6} value={text} aria-label="Texto do compromisso" onChange={(e) => (setText(e.target.value), setOk(false))} />
       <div className="row">
@@ -272,7 +282,7 @@ function OathCard() {
         </button>
       </div>
       {ok && <p className="small">Guardado.</p>}
-    </section>
+    </Setting>
   );
 }
 
@@ -294,8 +304,7 @@ function StyleCard() {
   const { repos, write } = useData();
   const style = repos.settings.get<RoutineStyle>('routineStyle', 'magica');
   return (
-    <section className="card">
-      <h2>Estilo da rotina</h2>
+    <Setting title="Estilo da rotina" hint={style === 'magica' ? 'Com ritual' : 'Sem ritual'}>
       <Choice
         label="Estilo da rotina"
         value={style}
@@ -305,7 +314,7 @@ function StyleCard() {
           { id: 'simples', title: 'Rotina simples', text: 'Os mesmos horários sem ritual: luz da manhã, intenção do dia, relaxamento guiado.' },
         ]}
       />
-    </section>
+    </Setting>
   );
 }
 
@@ -315,8 +324,7 @@ function LetterCard() {
   const [text, setText] = useState(() => repos.settings.get('letter', ''));
   const [ok, setOk] = useState(false);
   return (
-    <section className="card">
-      <h2>Carta para o momento difícil</h2>
+    <Setting title="Carta para o momento difícil" hint={text.trim() ? 'Escrita. Abre primeiro na Ajuda agora' : 'Ainda não escrita'}>
       <p className="small muted">
         Escreva agora, com calma, para você mesmo no momento da vontade. Ela aparece primeiro em Ajuda agora (e fica escondida se o app estiver
         trancado com PIN).
@@ -332,7 +340,7 @@ function LetterCard() {
         Guardar carta
       </button>
       {ok && <p className="small">Guardada. Ela vai estar lá quando você precisar.</p>}
-    </section>
+    </Setting>
   );
 }
 
@@ -340,8 +348,7 @@ function ThemeCard() {
   const { repos, write } = useData();
   const theme = repos.settings.get<'auto' | 'claro' | 'noite'>('theme', 'auto');
   return (
-    <section className="card">
-      <h2>Aparência</h2>
+    <Setting title="Aparência" hint={{ auto: 'Automático, segue o celular', claro: 'Claro', noite: 'Noite' }[theme]}>
       <div className="seg" role="radiogroup" aria-label="Aparência">
         {(
           [
@@ -356,6 +363,6 @@ function ThemeCard() {
         ))}
       </div>
       <p className="small muted">Automático segue o celular. As práticas guiadas ficam sempre noturnas.</p>
-    </section>
+    </Setting>
   );
 }

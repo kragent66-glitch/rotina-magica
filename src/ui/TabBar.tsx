@@ -17,11 +17,13 @@ export function TabBar({ current }: { current: RouteName }) {
         <button
           key={route}
           type="button"
-          className={`tabbar__item${current === route ? ' on' : ''}`}
+          className={`tabbar__item${current === route ? ' on' : ''}${route === 'sos' ? ' tabbar__item--sos' : ''}`}
           aria-current={current === route ? 'page' : undefined}
           onClick={() => navigate(route)}
         >
-          <Icon />
+          <span className="tabbar__icon">
+            <Icon />
+          </span>
           <span>{label}</span>
         </button>
       ))}

@@ -4,7 +4,7 @@ import type { GameId } from '@/domain/progression';
 import { toLocalDate } from '@/domain/dates';
 import { PRACTICES, type PracticeId } from '@/domain/routine';
 import { URGE_WAVE_MS, formatRemaining } from '@/domain/urge';
-import { BreakIcon, Chevron, TriangleIcon, WindIcon } from '@/ui/icons';
+import { BreakIcon, Chevron, KnotIcon, TriangleIcon, WindIcon } from '@/ui/icons';
 import { navigate } from '@/router';
 import { PracticePlayer } from '../routine/PracticePlayer';
 import { GameView } from '../games/Games';
@@ -18,9 +18,9 @@ type Stage = 'start' | 'playing' | 'practice' | 'after' | 'passou' | 'ainda_fort
 
 // As três ferramentas da rotina: cortar, respirar, ocupar a mente com uma imagem.
 const WEAPONS: { id: PracticeId; title: string; Icon: () => ReactElement }[] = [
-  { id: 'quebra', title: 'Quebra do automatismo', Icon: BreakIcon },
-  { id: 'respiracao', title: 'Prāṇāyāma 4-4-4-4', Icon: WindIcon },
-  { id: 'triangulo', title: 'O Triângulo', Icon: TriangleIcon },
+  { id: 'quebra', title: 'Cortar o pensamento', Icon: BreakIcon },
+  { id: 'respiracao', title: 'Respiração quadrada', Icon: WindIcon },
+  { id: 'triangulo', title: 'Imagem do triângulo', Icon: TriangleIcon },
 ];
 
 function Rating({ value, onPick, label }: { value: number | null; onPick: (n: number) => void; label: string }) {
@@ -165,14 +165,20 @@ export function SosScreen({ onClose, onUsed, locked = false }: { onClose: () => 
 
   return (
     <main className="screen sos-screen">
-      <button type="button" className="link" onClick={onClose}>
-        ← Voltar
-      </button>
+      {/* Com o app trancado não há barra de baixo: o voltar leva de novo à tela do PIN. */}
+      {locked && (
+        <button type="button" className="link" onClick={onClose}>
+          ← Voltar
+        </button>
+      )}
       {stage === 'ainda_forte' ? (
         <h1>Tudo bem. A vontade às vezes vem em ondas seguidas. Tente outra coisa.</h1>
       ) : stage === 'start' ? (
         <h1>Ajuda agora</h1>
       ) : null}
+      <button type="button" className="chip chip--help" onClick={() => document.getElementById('falar')?.scrollIntoView({ behavior: 'smooth' })}>
+        Falar com alguém agora
+      </button>
       <p className="muted small">
         A vontade sobe, chega no pico e passa. {remaining > 0 ? `Fique comigo ${formatRemaining(remaining)}.` : 'O pico já passou.'}
       </p>
@@ -209,6 +215,9 @@ export function SosScreen({ onClose, onUsed, locked = false }: { onClose: () => 
       </div>
 
       <button type="button" className="item__body item__body--solo" onClick={() => navigate('pensamento')}>
+        <span className="item__icon">
+          <KnotIcon />
+        </span>
         <span className="item__text">
           <strong>Desatar o pensamento</strong>
           <span className="muted small">Se a cabeça está dizendo "só hoje", responda em 4 passos</span>
@@ -282,7 +291,7 @@ export function SosScreen({ onClose, onUsed, locked = false }: { onClose: () => 
         </button>
       </div>
 
-      <h2>Se precisar falar com alguém</h2>
+      <h2 id="falar">Se precisar falar com alguém</h2>
       <div className="stack">
         {/* Abre o WhatsApp para escolher o contato; a mensagem não fala do assunto. */}
         <a className="option" href={`https://wa.me/?text=${encodeURIComponent(CALL_SOMEONE)}`} target="_blank" rel="noopener noreferrer">
