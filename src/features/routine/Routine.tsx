@@ -5,11 +5,13 @@ import { isCareMode } from '@/domain/care';
 import { addDays, toLocalDate } from '@/domain/dates';
 import { forecastFor, forecastText } from '@/domain/forecast';
 import { DEFAULT_OATH, lastWeekCount, periodFor, routineDays, routineFor, type RoutineStep, type RoutineStyle } from '@/domain/routine';
+import { useInstall } from '@/platform/install';
 import { navigate } from '@/router';
 import { BlocksIcon, BookIcon, Chevron, KnotIcon, TriangleIcon } from '@/ui/icons';
 import { TonightCard } from '../evening/TonightCard';
 import { CareCard } from '../home/CareCard';
 import { MorningCard } from '../home/MorningCard';
+import { vibrate } from '../games/record';
 import { StepIcon } from './StepIcon';
 
 const GREETING = {
@@ -47,11 +49,15 @@ export function Routine() {
   const periodNow = ROUTINE.find((p) => p.id === current)!;
   const next = periodNow.steps.find((s) => !done.has(s.id)) ?? ALL_STEPS.find((s) => !done.has(s.id));
   const pct = Math.round((count / ALL_STEPS.length) * 100);
+  const { canInstall, install } = useInstall();
+  const installHidden = repos.settings.get('installDismissed', false);
+  const dateLabel = new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' }).format(now);
   const openStep = (s: RoutineStep) => (s.link === 'diario' ? navigate('diario') : navigate('rotina', s.id));
 
   return (
     <main className="screen screen--tabs">
       <header className="hero">
+        <p className="eyebrow">{dateLabel}</p>
         <h1>Rotina Mágica</h1>
         <p className="tagline">Retome o controle da sua vida, um dia de cada vez.</p>
       </header>
@@ -144,11 +150,14 @@ export function Routine() {
               <h2>
                 {p.title} <span className="period__name">· {p.name}</span>
               </h2>
-              <span className="muted small">
+              <span className={`muted small${n === p.steps.length ? ' period__done' : ''}`}>
                 {p.id === current ? 'agora · ' : ''}
-                {n}/{p.steps.length} {open.has(p.id) ? '▴' : '▾'}
+                {n === p.steps.length ? 'completo ✓' : `${n}/${p.steps.length}`} {open.has(p.id) ? '▴' : '▾'}
               </span>
             </button>
+            <span className="period__bar" aria-hidden="true">
+              <span style={{ width: `${(n / p.steps.length) * 100}%` }} />
+            </span>
             {open.has(p.id) && (
               <>
             <p className="muted small">{p.purpose}</p>
@@ -160,7 +169,7 @@ export function Routine() {
                     className="item__check"
                     aria-pressed={done.has(s.id)}
                     aria-label={`Marcar ${s.title}`}
-                    onClick={() => write((r) => r.routine.toggle(today, s.id))}
+                    onClick={() => (vibrate(done.has(s.id) ? 8 : 20), write((r) => r.routine.toggle(today, s.id)))}
                   >
                     {done.has(s.id) ? '✓' : ''}
                   </button>
@@ -186,6 +195,21 @@ export function Routine() {
         );
       })}
 
+      {canInstall && !installHidden && (
+        <section className="card install">
+          <h2>Leve o app para a tela inicial</h2>
+          <p className="small muted">Abre com um toque, funciona sem internet e o atalho de ajuda aparece ao segurar o ícone.</p>
+          <div className="row">
+            <button type="button" className="btn" onClick={install}>
+              Instalar
+            </button>
+            <button type="button" className="btn btn--ghost" onClick={() => write((r) => r.settings.set('installDismissed', true))}>
+              Agora não
+            </button>
+          </div>
+        </section>
+      )}
+
       {backupDue && (
         <section className="card nudge">
           <h2>Guarde uma cópia</h2>
@@ -203,46 +227,34 @@ export function Routine() {
 
       <section>
         <h2>Mais ferramentas</h2>
-        <div className="list">
-          <button type="button" className="item__body item__body--solo" onClick={() => navigate('pensamento')}>
+        <div className="tools">
+          <button type="button" className="tool" onClick={() => navigate('pensamento')}>
             <span className="item__icon">
               <KnotIcon />
             </span>
-            <span className="item__text">
-              <strong>Desatar um pensamento</strong>
-              <span className="muted small">Quando a cabeça insiste: corpo, emoção, pensamento e resposta</span>
-            </span>
-            <Chevron />
+            <strong>Desatar um pensamento</strong>
+            <span className="muted small">Quando a cabeça insiste</span>
           </button>
-          <button type="button" className="item__body item__body--solo" onClick={() => navigate('jogos')}>
+          <button type="button" className="tool" onClick={() => navigate('jogos')}>
             <span className="item__icon">
               <BlocksIcon />
             </span>
-            <span className="item__text">
-              <strong>Jogos</strong>
-              <span className="muted small">Blocos, Desvia, Rebate, Segura a onda e A noite</span>
-            </span>
-            <Chevron />
+            <strong>Jogos</strong>
+            <span className="muted small">Cinco jogos curtos</span>
           </button>
-          <button type="button" className="item__body item__body--solo" onClick={() => navigate('treino')}>
+          <button type="button" className="tool" onClick={() => navigate('treino')}>
             <span className="item__icon">
               <TriangleIcon />
             </span>
-            <span className="item__text">
-              <strong>Treinos de mente</strong>
-              <span className="muted small">Preparar respostas para quando a vontade vier</span>
-            </span>
-            <Chevron />
+            <strong>Treinos de mente</strong>
+            <span className="muted small">Respostas prontas para a vontade</span>
           </button>
-          <button type="button" className="item__body item__body--solo" onClick={() => navigate('lab')}>
+          <button type="button" className="tool" onClick={() => navigate('lab')}>
             <span className="item__icon">
               <BookIcon />
             </span>
-            <span className="item__text">
-              <strong>Seu laboratório</strong>
-              <span className="muted small">O que funcionou com você, com os seus dados</span>
-            </span>
-            <Chevron />
+            <strong>Seu laboratório</strong>
+            <span className="muted small">O que funciona com você</span>
           </button>
         </div>
       </section>

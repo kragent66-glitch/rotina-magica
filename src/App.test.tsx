@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { App } from './App';
 import { DataProvider } from './data/provider';
@@ -59,5 +59,25 @@ describe('Rumo', () => {
     const { user } = setup(repos);
     await user.click(screen.getByRole('button', { name: /Bateu vontade/ }));
     expect(await screen.findByText(/Vamos atravessar isso juntos/)).toBeInTheDocument();
+  });
+
+  it('oferece instalar quando o navegador permite, e "Agora não" esconde de vez', async () => {
+    const repos = createTestRepositories();
+    repos.settings.set('onboardingDone', true);
+    const { user } = setup(repos);
+    expect(screen.queryByText('Leve o app para a tela inicial')).not.toBeInTheDocument();
+
+    const prompt = Object.assign(new Event('beforeinstallprompt'), {
+      prompt: () => Promise.resolve(),
+      userChoice: Promise.resolve({ outcome: 'dismissed' }),
+    });
+    act(() => {
+      window.dispatchEvent(prompt);
+    });
+    const card = screen.getByText('Leve o app para a tela inicial').closest('section')!;
+    await user.click(within(card).getByRole('button', { name: 'Agora não' }));
+    expect(screen.queryByText('Leve o app para a tela inicial')).not.toBeInTheDocument();
+    expect(repos.settings.get('installDismissed', false)).toBe(true);
+    window.dispatchEvent(new Event('appinstalled'));
   });
 });
